@@ -1,0 +1,25 @@
+{
+  "name": "temporary.offcanvas",
+  "version": "1.0.0",
+  "homepage": "https://github.com/trickpeeraze/temporary.offcanvas",
+  "authors": [
+    "Siraphob Rhompo <trickpeeraze@gmail.com>"
+  ],
+  "description": "A component canvase with ease",
+  "main": "src/temporary.offcanvas.js",
+  "keywords": [
+    "offcanvas"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "velocity": "~1.2.3",
+    "jquery-easing-original": "~1.3.2"
+  }
+}
