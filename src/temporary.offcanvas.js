@@ -15,7 +15,7 @@
  *
  */
 
-/* global module, document */
+/* global module, document, window, setTimeout, clearTimeout */
 (function (root, factory, define) {
 
 	if (typeof define === 'function' && define.amd) {
@@ -58,8 +58,9 @@
 			option = merge(defaults, options),
 			elContainer = document.getElementById(containerId),
 			elPageOverlay = null,
+			elCanvas,
 			move,
-			elCanvas;
+			poolingRate;
 
 		init();
 
@@ -126,8 +127,8 @@
 			}
 
 		};
-
-
+		
+		
 		this.resize = function () {
 			this.close();
 			resize(elCanvas, option.position, option.size);
@@ -167,7 +168,7 @@
 				});
 
 			}
-
+				
 			var btnNodeList = document.querySelectorAll(option.toggleButtonSelector);
 
 			if (btnNodeList.length) {
@@ -175,7 +176,21 @@
 					bindButton(btnNodeList[i]);
 				}
 			}
+			
+			if ((/%$/).test(option.size)) {
+				window.addEventListener('resize', function () {
 
+					if (poolingRate) {
+						clearTimeout(poolingRate);
+					}
+
+					poolingRate = setTimeout(function () {
+						_this.resize();
+					}, 250);
+
+				}, false);
+			}
+			
 		}
 
 
@@ -233,11 +248,11 @@
 
 			return el;
 		}
-
-
+		
+		
 		function resize (el, position, size) {
 			size = calculatePixel(size);
-
+			
 			switch (position) {
 			case 'top':
 				el.style.height = toPixel(size);
@@ -264,7 +279,7 @@
 				el.style.height = '100%';
 				break;
 			}
-
+			
 		}
 
 
@@ -299,7 +314,7 @@
 				var cl = el.getAttribute('class');
 				el.setAttribute('class', cl + ' ' + name);
 			};
-
+			
 			if (el.length) {
 				for (var i = 0; i < el.length; ++i) {
 					add(el[i], name);
@@ -307,7 +322,7 @@
 			} else {
 				add(el, name);
 			}
-
+			
 		}
 
 
@@ -316,7 +331,7 @@
 				var cl = el.getAttribute('class');
 				el.setAttribute('class', cl.replace(name, '').trim());
 			};
-
+			
 			if (el.length) {
 				for (var i = 0; i < el.length; ++i) {
 					remove(el[i], name);
@@ -324,7 +339,7 @@
 			} else {
 				remove(el, name);
 			}
-
+			
 		}
 
 
