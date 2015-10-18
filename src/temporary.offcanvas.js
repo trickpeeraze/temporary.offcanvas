@@ -287,7 +287,7 @@
 
 			if (el.length) {
 				for (var i = 0; i < el.length; ++i) {
-					add(el, name);
+					add(el[i], name);
 				}
 			} else {
 				add(el, name);
@@ -304,7 +304,7 @@
 
 			if (el.length) {
 				for (var i = 0; i < el.length; ++i) {
-					remove(el, name);
+					remove(el[i], name);
 				}
 			} else {
 				remove(el, name);
