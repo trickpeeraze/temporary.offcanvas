@@ -46,11 +46,10 @@
 				duration: 220,
 				easing: 'ease',
 				delay: 0,
-				toggleButton: '',
 				fixedPosition: true,
 				pushAndPull: false,
 				tapToClose: true,
-				toggleButtonId: null,
+				toggleButtonSelector: null,
 				onBeforeOpen: function(){},
 				onOpen: function(){},
 				onBeforeClose: function(){},
@@ -162,26 +161,35 @@
 
 			}
 
-			if (option.toggleButtonId) {
-				document
-					.getElementById(option.toggleButtonId)
-					.addEventListener('click' ,function (e) {
-						e.preventDefault();
+			var btnNodeList = document.querySelectorAll(option.toggleButtonSelector);
 
-						if(_this.isClose){
-							_this.open();
-						} else {
-							_this.close();
-						}
-
-						return false;
-					}, false);
+			if (btnNodeList.length) {
+				for (var i = 0; i < btnNodeList.length; ++i) {
+					bindButton(btnNodeList[i]);
+				}
 			}
+
 		}
+
 
 		/* recalculate pixel from percentage unit by its elContainer */
 		function calculatePixel (val) {
 			return ( (/%$/).test(val) ) ? elContainer.offsetWidth * parseInt(val) / 100 : parseInt(val);
+		}
+
+
+		function bindButton (btn) {
+			btn.addEventListener('click' ,function (e) {
+				e.preventDefault();
+
+				if(_this.isClose){
+					_this.open();
+				} else {
+					_this.close();
+				}
+
+				return false;
+			}, false);
 		}
 
 
@@ -224,8 +232,8 @@
 			el.open = function (callback) {
 				addClass(this, 'active');
 
-				if (option.toggleButtonId) {
-					addClass(document.getElementById(option.toggleButtonId), 'active');
+				if (option.toggleButtonSelector) {
+					addClass(document.querySelectorAll(option.toggleButtonSelector), 'active');
 				}
 
 				transition(this, move.on, option.duration, option.easing, option.delay, callback);
@@ -234,8 +242,8 @@
 			el.close = function (callback) {
 				removeClass(this, 'active');
 
-				if (option.toggleButtonId) {
-					removeClass(document.getElementById(option.toggleButtonId), 'active');
+				if (option.toggleButtonSelector) {
+					removeClass(document.querySelectorAll(option.toggleButtonSelector), 'active');
 				}
 
 				transition(this, move.off, option.duration, option.easing, option.delay, callback);
@@ -272,14 +280,36 @@
 
 
 		function addClass (el, name) {
-			var cl = el.getAttribute('class');
-			el.setAttribute('class', cl + ' ' + name);
+			var add = function (el, name) {
+				var cl = el.getAttribute('class');
+				el.setAttribute('class', cl + ' ' + name);
+			};
+
+			if (el.length) {
+				for (var i = 0; i < el.length; ++i) {
+					add(el, name);
+				}
+			} else {
+				add(el, name);
+			}
+
 		}
 
 
 		function removeClass (el, name) {
-			var cl = el.getAttribute('class');
-			el.setAttribute('class', cl.replace(name, '').trim());
+			var remove = function (el, name) {
+				var cl = el.getAttribute('class');
+				el.setAttribute('class', cl.replace(name, '').trim());
+			};
+
+			if (el.length) {
+				for (var i = 0; i < el.length; ++i) {
+					remove(el, name);
+				}
+			} else {
+				remove(el, name);
+			}
+
 		}
 
 
