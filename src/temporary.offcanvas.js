@@ -58,10 +58,8 @@
 			option = merge(defaults, options),
 			elContainer = document.getElementById(containerId),
 			elPageOverlay = null,
-			size   = calculatePixel(option.size),
-			offset = calculatePixel(option.offset),
-			move = initMove(option.position, size, offset),
-			elCanvas = createCanvas(option, size, move);
+			move,
+			elCanvas;
 
 		init();
 
@@ -130,6 +128,13 @@
 		};
 
 
+		this.resize = function () {
+			this.close();
+			resize(elCanvas, option.position, option.size);
+			calculateMove(option.position, option.size, option.offset);
+		};
+
+
 		this.destroy = function () {
 			elContainer.removeChild(elCanvas);
 		};
@@ -138,6 +143,8 @@
 		 * Functions
 		 */
 		function init () {
+			calculateMove(option.position, option.size, option.offset);
+			elCanvas = createCanvas(option);
 			elCanvas.innerHTML = option.content;
 
 			if (elContainer.style.position !== 'absolute') {
@@ -174,7 +181,7 @@
 
 		/* recalculate pixel from percentage unit by its elContainer */
 		function calculatePixel (val) {
-			return ( (/%$/).test(val) ) ? elContainer.offsetWidth * parseInt(val) / 100 : parseInt(val);
+			return ( (/%$/).test(val) ) ? Math.floor(elContainer.offsetWidth * parseInt(val) / 100) : parseInt(val);
 		}
 
 
@@ -193,7 +200,7 @@
 		}
 
 
-		function createCanvas (option, size, move) {
+		function createCanvas (option) {
 
 			var el = document.createElement('div');
 			el.setAttribute('class', option.canvasClass);
@@ -202,7 +209,36 @@
 			el.style.boxSizing = 'border-box';
 			el.style.overflow  = 'auto';
 
-			switch (option.position) {
+			resize(el, option.position, option.size);
+
+			el.open = function (callback) {
+				addClass(this, 'active');
+
+				if (option.toggleButtonSelector) {
+					addClass(document.querySelectorAll(option.toggleButtonSelector), 'active');
+				}
+
+				transition(this, move.on, option.duration, option.easing, option.delay, callback);
+			};
+
+			el.close = function (callback) {
+				removeClass(this, 'active');
+
+				if (option.toggleButtonSelector) {
+					removeClass(document.querySelectorAll(option.toggleButtonSelector), 'active');
+				}
+
+				transition(this, move.off, option.duration, option.easing, option.delay, callback);
+			};
+
+			return el;
+		}
+
+
+		function resize (el, position, size) {
+			size = calculatePixel(size);
+
+			switch (position) {
 			case 'top':
 				el.style.height = toPixel(size);
 				el.style.top    = toPixel(size, true);
@@ -229,27 +265,6 @@
 				break;
 			}
 
-			el.open = function (callback) {
-				addClass(this, 'active');
-
-				if (option.toggleButtonSelector) {
-					addClass(document.querySelectorAll(option.toggleButtonSelector), 'active');
-				}
-
-				transition(this, move.on, option.duration, option.easing, option.delay, callback);
-			};
-
-			el.close = function (callback) {
-				removeClass(this, 'active');
-
-				if (option.toggleButtonSelector) {
-					removeClass(document.querySelectorAll(option.toggleButtonSelector), 'active');
-				}
-
-				transition(this, move.off, option.duration, option.easing, option.delay, callback);
-			};
-
-			return el;
 		}
 
 
@@ -313,8 +328,8 @@
 		}
 
 
-		function initMove (position, size, offset) {
-			var move;
+		function calculateMove (position, size, offset) {
+			size = calculatePixel(size);
 
 			switch (position) {
 			case 'top':
@@ -331,7 +346,6 @@
 				break;
 			}
 
-			return move;
 		}
 
 
