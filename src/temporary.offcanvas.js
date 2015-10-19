@@ -34,7 +34,6 @@
 		}
 
 		var
-			_this = this,
 			defaults = {
 				debug: false,
 				content: '',
@@ -60,143 +59,49 @@
 			elPageOverlay = null,
 			elCanvas,
 			move,
-			poolingRate;
-
-		init();
+			poolingRate,
+			isClose = true,
+			isOpen  = false;
 
 		/**
 		 * Properties
 		 */
-		this.isOpen  = false;
-		this.isClose = true;
+		this.isOpen  = isOpen;
+		this.isClose = isClose;
 
 		/**
 		 * Methods
 		 */
-		this.open = function (callback) {
+		this.open    = open;
+		this.close   = close;
+		this.resize  = resize;
+		this.destroy = destroy;
 
-			if (!elCanvas) {
-				return;
-			}
-
-			callback = callback || option.onOpen;
-			option.onBeforeOpen(elCanvas, elContainer); /* Event: before loaded */
-
-			if (this.isClose) {
-
-				if(option.pushAndPull){
-					transition(elContainer.firstChild, move.on, option.duration, option.easing, option.delay);
-				}
-
-				if (elPageOverlay) {
-					elPageOverlay.show();
-				}
-
-				elCanvas.open(callback);
-
-				this.isOpen  = true;
-				this.isClose = false;
-			}
-
-		};
+		init();
 
 
-		this.close = function (callback) {
+		//////////////////////////////////////
 
-			if (!elCanvas) {
-				return;
-			}
-
-			callback = callback || option.onClose;
-			option.onBeforeClose(elCanvas, elContainer);
-
-			if (this.isOpen) {
-
-				if (option.pushAndPull) {
-					transition(elContainer.firstChild, move.off, option.duration, option.easing, option.delay);
-				}
-
-				if (elPageOverlay) {
-					elPageOverlay.hide();
-				}
-
-				elCanvas.close(callback);
-
-				this.isOpen  = false;
-				this.isClose = true;
-			}
-
-		};
-		
-		
-		this.resize = function () {
-			this.close();
-			resize(elCanvas, option.position, option.size);
-			calculateMove(option.position, option.size, option.offset);
-		};
-
-
-		this.destroy = function () {
+		function destroy() {
 			elContainer.removeChild(elCanvas);
-		};
-
-		/**
-		 * Functions
-		 */
-		function init () {
-			calculateMove(option.position, option.size, option.offset);
-			elCanvas = createCanvas(option);
-			elCanvas.innerHTML = option.content;
-
-			if (elContainer.style.position !== 'absolute') {
-				elContainer.style.position = 'relative';
-			}
-
-			if(! option.fixedPosition ){
-				elContainer.style.overflow = 'hidden';
-			}
-
-			elContainer.appendChild(elCanvas);
-
-			if (option.tapToClose) {
-
-				elPageOverlay = createPageOverlay();
-				elContainer.insertBefore(elPageOverlay, elCanvas);
-
-				elPageOverlay.addEventListener('click', function () {
-					_this.close();
-				});
-
-			}
-				
-			var btnNodeList = document.querySelectorAll(option.toggleButtonSelector);
-
-			if (btnNodeList.length) {
-				for (var i = 0; i < btnNodeList.length; ++i) {
-					bindButton(btnNodeList[i]);
-				}
-			}
-			
-			if ((/%$/).test(option.size)) {
-				window.addEventListener('resize', function () {
-
-					if (poolingRate) {
-						clearTimeout(poolingRate);
-					}
-
-					poolingRate = setTimeout(function () {
-						_this.resize();
-					}, 250);
-
-				}, false);
-			}
-			
 		}
 
 
-		/* recalculate pixel from percentage unit by its elContainer */
 		function calculatePixel (val) {
 			return ( (/%$/).test(val) ) ? Math.floor(elContainer.offsetWidth * parseInt(val) / 100) : parseInt(val);
+		}
+
+
+		function toPixel (point, minus) {
+			minus = minus || false;
+			return (minus) ? (-point) + 'px' : point + 'px';
+		}
+
+
+		function resize () {
+			this.close();
+			calculateSize(elCanvas, option.position, option.size);
+			calculateMove(option.position, option.size, option.offset);
 		}
 
 
@@ -204,14 +109,72 @@
 			btn.addEventListener('click' ,function (e) {
 				e.preventDefault();
 
-				if(_this.isClose){
-					_this.open();
+				if(isClose){
+					open();
 				} else {
-					_this.close();
+					close();
 				}
 
 				return false;
 			}, false);
+		}
+
+
+		function open (callback) {
+
+			if (!elCanvas || isOpen) {
+				return;
+			}
+
+			callback = callback || option.onOpen;
+			option.onBeforeOpen(elCanvas, elContainer); /* Event: before loaded */
+
+			if (option.pushAndPull) {
+				transition(elContainer.firstChild, move.on, option.duration, option.easing, option.delay);
+			}
+
+			if (elPageOverlay) {
+				elPageOverlay.show();
+			}
+
+			if (option.toggleButtonSelector) {
+				addClass(document.querySelectorAll(option.toggleButtonSelector), 'active');
+			}
+
+			addClass(elCanvas, 'active');
+			transition(elCanvas, move.on, option.duration, option.easing, option.delay, callback);
+
+			isOpen  = true;
+			isClose = false;
+		}
+
+
+		function close (callback) {
+
+			if (!elCanvas || isClose) {
+				return;
+			}
+
+			callback = callback || option.onClose;
+			option.onBeforeClose(elCanvas, elContainer);
+
+			if (option.pushAndPull) {
+				transition(elContainer.firstChild, move.off, option.duration, option.easing, option.delay);
+			}
+
+			if (elPageOverlay) {
+				elPageOverlay.hide();
+			}
+
+			if (option.toggleButtonSelector) {
+				removeClass(document.querySelectorAll(option.toggleButtonSelector), 'active');
+			}
+
+			removeClass(elCanvas, 'active');
+			transition(elCanvas, move.off, option.duration, option.easing, option.delay, callback);
+
+			isOpen  = false;
+			isClose = true;
 		}
 
 
@@ -224,33 +187,13 @@
 			el.style.boxSizing = 'border-box';
 			el.style.overflow  = 'auto';
 
-			resize(el, option.position, option.size);
-
-			el.open = function (callback) {
-				addClass(this, 'active');
-
-				if (option.toggleButtonSelector) {
-					addClass(document.querySelectorAll(option.toggleButtonSelector), 'active');
-				}
-
-				transition(this, move.on, option.duration, option.easing, option.delay, callback);
-			};
-
-			el.close = function (callback) {
-				removeClass(this, 'active');
-
-				if (option.toggleButtonSelector) {
-					removeClass(document.querySelectorAll(option.toggleButtonSelector), 'active');
-				}
-
-				transition(this, move.off, option.duration, option.easing, option.delay, callback);
-			};
+			calculateSize(el, option.position, option.size);
 
 			return el;
 		}
 		
 		
-		function resize (el, position, size) {
+		function calculateSize (el, position, size) {
 			size = calculatePixel(size);
 			
 			switch (position) {
@@ -280,12 +223,6 @@
 				break;
 			}
 			
-		}
-
-
-		function toPixel (point, minus) {
-			minus = minus || false;
-			return (minus) ? (-point) + 'px' : point + 'px';
 		}
 
 
@@ -398,6 +335,57 @@
 			};
 
 			return el;
+		}
+
+
+		function init () {
+			calculateMove(option.position, option.size, option.offset);
+			elCanvas = createCanvas(option);
+			elCanvas.innerHTML = option.content;
+
+			if (elContainer.style.position !== 'absolute') {
+				elContainer.style.position = 'relative';
+			}
+
+			if(! option.fixedPosition ){
+				elContainer.style.overflow = 'hidden';
+			}
+
+			elContainer.appendChild(elCanvas);
+
+			if (option.tapToClose) {
+
+				elPageOverlay = createPageOverlay();
+				elContainer.insertBefore(elPageOverlay, elCanvas);
+
+				elPageOverlay.addEventListener('click', function () {
+					close();
+				});
+
+			}
+
+			var btnNodeList = document.querySelectorAll(option.toggleButtonSelector);
+
+			if (btnNodeList.length) {
+				for (var i = 0; i < btnNodeList.length; ++i) {
+					bindButton(btnNodeList[i]);
+				}
+			}
+
+			if ((/%$/).test(option.size)) {
+				window.addEventListener('resize', function () {
+
+					if (poolingRate) {
+						clearTimeout(poolingRate);
+					}
+
+					poolingRate = setTimeout(function () {
+						resize();
+					}, 250);
+
+				}, false);
+			}
+
 		}
 
 	};
