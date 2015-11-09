@@ -15,7 +15,7 @@
  *
  */
 
-/* global module, document, window, setTimeout, clearTimeout */
+/* global module, document, window, setTimeout, clearTimeout, Event */
 (function (root, factory, define) {
 
 	if (typeof define === 'function' && define.amd) {
@@ -48,11 +48,7 @@
 				fixedPosition: true,
 				pushAndPull: false,
 				tapToClose: true,
-				toggleButtonSelector: null,
-				onBeforeOpen: function(){},
-				onOpen: function(){},
-				onBeforeClose: function(){},
-				onClose: function(){}
+				toggleButtonSelector: null
 			},
 			option = merge(defaults, options),
 			elContainer = document.getElementById(containerId),
@@ -61,7 +57,9 @@
 			move,
 			poolingRate,
 			isClose = true,
-			isOpen  = false;
+			isOpen  = false,
+			openEvent   = new Event('open'),
+			closeEvent  = new Event('close');
 
 		/**
 		 * Properties
@@ -76,6 +74,8 @@
 		this.close   = close;
 		this.resize  = resize;
 		this.destroy = destroy;
+		this.on  = on;
+		this.off = off;
 
 		init();
 
@@ -95,6 +95,17 @@
 		function toPixel (point, minus) {
 			minus = minus || false;
 			return (minus) ? (-point) + 'px' : point + 'px';
+		}
+		
+		
+		function on (type, listener, useCapture) {
+			useCapture = useCapture || false;
+			elCanvas.addEventListener(type, listener, useCapture);
+		}
+		
+		function off (type, listener ,useCapture) {
+			useCapture = useCapture || false;
+			elCanvas.removeEventListener(type, listener, useCapture);
 		}
 
 
@@ -126,9 +137,6 @@
 				return;
 			}
 
-			callback = callback || option.onOpen;
-			option.onBeforeOpen(elCanvas, elContainer); /* Event: before loaded */
-
 			if (option.pushAndPull) {
 				transition(elContainer.firstChild, move.on, option.duration, option.easing, option.delay);
 			}
@@ -142,7 +150,14 @@
 			}
 
 			addClass(elCanvas, 'active');
-			transition(elCanvas, move.on, option.duration, option.easing, option.delay, callback);
+			transition(elCanvas, move.on, option.duration, option.easing, option.delay, function () {
+				elCanvas.dispatchEvent(openEvent);
+				
+				if (typeof callback === 'function') {
+					callback();
+				}
+				
+			});
 
 			isOpen  = true;
 			isClose = false;
@@ -154,9 +169,6 @@
 			if (!elCanvas || isClose) {
 				return;
 			}
-
-			callback = callback || option.onClose;
-			option.onBeforeClose(elCanvas, elContainer);
 
 			if (option.pushAndPull) {
 				transition(elContainer.firstChild, move.off, option.duration, option.easing, option.delay);
@@ -171,13 +183,20 @@
 			}
 
 			removeClass(elCanvas, 'active');
-			transition(elCanvas, move.off, option.duration, option.easing, option.delay, callback);
+			transition(elCanvas, move.off, option.duration, option.easing, option.delay, function () {
+				elCanvas.dispatchEvent(closeEvent);
+				
+				if (typeof callback === 'function') {
+					callback();
+				}
+			
+			});
 
 			isOpen  = false;
 			isClose = true;
 		}
-
-
+		
+		
 		function createCanvas (option) {
 
 			var el = document.createElement('div');
@@ -231,10 +250,11 @@
 			var y = move.y || 0;
 
 			if (typeof callback === 'function') {
-				el.addEventListener('oanimationend animationend webkitAnimationEnd', function(e) {
-					e.target.removeEventListener(e.type, arguments.callee);
+				var listener = function(e) {
+					e.target.removeEventListener(e.type, listener, false);
 					callback(el);
-				}, false);
+				};
+				el.addEventListener('oanimationend animationend webkitAnimationEnd', listener, false);
 			}
 
 			el.style.transform = 'translate3d(0,0,0)';
