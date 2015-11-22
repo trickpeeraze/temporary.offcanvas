@@ -58,8 +58,10 @@
 			poolingRate,
 			isClose = true,
 			isOpen  = false,
-			openEvent   = new Event('open'),
-			closeEvent  = new Event('close');
+			beforeopenEvent  = new Event('beforeopen'),
+			beforecloseEvent = new Event('beforeclose'),
+			openEvent  = new Event('open'),
+			closeEvent = new Event('close');
 
 		/**
 		 * Properties
@@ -150,6 +152,7 @@
 			}
 
 			addClass(elCanvas, 'active');
+			elCanvas.dispatchEvent(beforeopenEvent);
 			transition(elCanvas, move.on, option.duration, option.easing, option.delay, function () {
 				elCanvas.dispatchEvent(openEvent);
 				
@@ -179,10 +182,11 @@
 			}
 
 			if (option.toggleButtonSelector) {
-				removeClass(document.querySelectorAll(option.toggleButtonSelector), 'active');
+				removeClass(document.querySelectorAll(option.toggleButtonSelector + ' .active'), 'active');
 			}
 
 			removeClass(elCanvas, 'active');
+			elCanvas.dispatchEvent(beforecloseEvent);
 			transition(elCanvas, move.off, option.duration, option.easing, option.delay, function () {
 				elCanvas.dispatchEvent(closeEvent);
 				
