@@ -5,7 +5,7 @@
   "authors": [
     "Siraphob Rhompo <trickpeeraze@gmail.com>"
   ],
-  "description": "A component canvase with ease",
+  "description": "A component canvas with ease",
   "main": "src/temporary.offcanvas.js",
   "keywords": [
     "offcanvas"
