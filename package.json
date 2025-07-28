@@ -1,0 +1,17 @@
+{
+  "name": "temporary.offcanvas",
+  "version": "2.0.0",
+  "description": "A jQuery offcanvas plugin built with Vite",
+  "main": "src/temporary.offcanvas.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "echo \"No tests specified\""
+  },
+  "dependencies": {
+    "jquery": "^3.7.1"
+  },
+  "devDependencies": {
+    "vite": "^7.0.6"
+  }
+}
